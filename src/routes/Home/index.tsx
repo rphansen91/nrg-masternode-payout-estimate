@@ -16,7 +16,7 @@ export const Home = () => {
       <EnergiProvider>
         <Container maxWidth="sm">
           <Card>
-            <CardHeader title="NRG Masternode Payout Estimate" />
+            <CardHeader title="NRG Masternode Payout ETA" />
             <Divider />
             <CardContent>
               <AddMasternode />
