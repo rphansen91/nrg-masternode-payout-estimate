@@ -1,12 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+import { BrowserRouter } from "react-router-dom";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import MuiPickersUtilsProvider from "@material-ui/pickers/MuiPickersUtilsProvider";
+import MomentUtils from "@date-io/moment";
+import { ThemeProvider } from "./themes";
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <MuiPickersUtilsProvider utils={MomentUtils}>
+        <CssBaseline />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </MuiPickersUtilsProvider>
+    </ThemeProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
