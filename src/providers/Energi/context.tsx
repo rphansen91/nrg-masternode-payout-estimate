@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useCallback } from 'react'
 import { hawk, useHawkState, useHawkSetState, dispatch } from 'react-hawk'
-import { listMasternodes, IMasternode } from './api'
+import { listMasternodes } from './api'
+import { IMasternode } from './types'
 
 const ADDRESSES = 'nrg_addresses'
 const addressesHawk = hawk({

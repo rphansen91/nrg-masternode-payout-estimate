@@ -13,7 +13,8 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import Skeleton from "@material-ui/lab/Skeleton";
 import React, { useMemo } from "react";
 import { AddressAvatar } from "../../components/Avatar";
-import { estimateBlocksTil, IMasternode } from "../../providers/Energi/api";
+import { IMasternode } from "../../providers/Energi/types"
+import { estimateBlocksTil } from "../../providers/Energi/estimate";
 import { useRemoveAddress } from "../../providers/Energi/context";
 
 const useMasternodeListItemStyle = makeStyles((theme: Theme) =>

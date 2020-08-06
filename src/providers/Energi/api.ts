@@ -1,22 +1,11 @@
-import moment from "moment";
+import { IMasternode, WEI } from "./types";
+import { estimateBlocksTil } from './estimate'
 
 const nodeApi = "https://nodeapi.energi.network/";
-const WEI = 1e18;
-
-export interface IMasternode {
-  AnnouncedBlock: number;
-  Collateral: string;
-  Enode: string;
-  IsActive: boolean;
-  IsAlive: boolean;
-  Masternode: string;
-  Owner: string;
-  SWFeatures: string;
-  SWVersion: string;
-}
 
 export const getBalances = async (owners: string | string[]) =>
   Promise.all(([] as string[]).concat(owners).map(getBalance)).then(merge);
+
 export const getBalance = (owner: string) => {
   return fetch(
     `//explorer.energi.network/api?module=account&action=balance&address=${owner}`
@@ -46,28 +35,6 @@ export async function estimateBlocksTilNextMasternodeReward(owner: string) {
   return estimateBlocksTil(result, owner);
 }
 
-export function estimateBlocksTil(result: IMasternode[] | null, owner: string) {
-  const index = (result || []).findIndex(({ Owner }) => Owner.toLowerCase() === (owner || '').toLowerCase());
-  const masternode = (result || [])[index];
-  if (!masternode) return { isActive: false, isAlive: false };
-  const precedingResults = (result || []).slice(0, index);
-  const precedingAmounts = precedingResults.map(
-    ({ Collateral }) => parseInt(Collateral) / WEI
-  );
-  const precedingCollateral = precedingAmounts.reduce((acc, c) => acc + c, 0);
-  const blocks = Math.floor(precedingCollateral / 10000);
-  const estimatedTime = moment().add(blocks, "minutes");
-  const estimatedTimeUntil = estimatedTime.fromNow();
-  return {
-    rank: index + 1,
-    blocks,
-    isActive: masternode.IsActive,
-    isAlive: masternode.IsAlive,
-    estimatedTime,
-    estimatedTimeUntil,
-  };
-}
-
 export async function rpc<V>(
   url = "",
   method = "",
@@ -81,7 +48,7 @@ export async function rpc<V>(
   return fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 15, method, params }),
+    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
   }).then((v) => v.json());
 }
 
