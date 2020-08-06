@@ -1,13 +1,12 @@
 import React, { Suspense, lazy } from 'react';
 import { Route, Switch } from 'react-router-dom';
 import LinearProgress from '@material-ui/core/LinearProgress'
+import About from './routes/About'
+import Home from './routes/Home'
 
 const AppLoader = () => {
   return <LinearProgress />
 }
-
-const Home = lazy(() => import('./routes/Home'));
-const About = lazy(() => import('./routes/About'));
 
 function App() {
   return (
