@@ -1,7 +1,10 @@
+/** global idb */
 import { IMasternode, WEI } from "./types";
-import { estimateBlocksTil } from './estimate'
+import { estimateBlocksTil } from "./estimate";
+import { openIndexDb, read, MAX_AGE } from './indexdb'
 
 const nodeApi = "https://nodeapi.energi.network/";
+const masternodeListMethod = "masternode_listMasternodes";
 
 export const getBalances = async (owners: string | string[]) =>
   Promise.all(([] as string[]).concat(owners).map(getBalance)).then(merge);
@@ -15,8 +18,41 @@ export const getBalance = (owner: string) => {
     .then((balance) => ({ [owner]: { balance } }));
 };
 
-export const listMasternodes = () => {
-  return rpc<IMasternode[]>(nodeApi, "masternode_listMasternodes");
+export const listMasternodes = async () => {
+  const db = await openIndexDb(masternodeListMethod).catch((e: any) => {
+    console.warn(e)
+  });
+  if (db) {
+    try {
+      const tx = db.transaction([masternodeListMethod], "readonly");
+      const store = tx.objectStore(masternodeListMethod);
+      const result = await read(store.get(masternodeListMethod))
+      const age = Date.now() - result.timestamp
+      console.log("Cached result", result, age);
+      if (result && age < MAX_AGE) {
+        return result;
+      }
+    } catch (e) {
+      console.error('Get cached data error', e)
+    }
+  }
+  const result = await rpc<IMasternode[]>(
+    nodeApi,
+    "masternode_listMasternodes"
+  );
+  if (db) {
+    try {
+      const tx = db.transaction([masternodeListMethod], "readwrite");
+      const store = tx.objectStore(masternodeListMethod);
+      const cache = { ...result, method: masternodeListMethod, timestamp: Date.now() }
+      store.put(cache);
+      console.log("Save cached result", result);
+      await tx.complete;
+    } catch (e) {
+      console.error('Save cached data error', e)
+    }
+  }
+  return result;
 };
 
 export async function estimateBlocksTilNextMasternodeRewards(

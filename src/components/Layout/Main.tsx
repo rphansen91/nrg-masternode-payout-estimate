@@ -7,7 +7,7 @@ import { NavLink } from 'react-router-dom'
 export const MainLayout: FC = ({ children }) => {
   return (
     <>
-      <Box py={5} flexGrow={1}>
+      <Box py={5}>
         {children}
       </Box>
       <Box display="flex" alignItems="center" py={5}>

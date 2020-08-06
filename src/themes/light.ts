@@ -8,7 +8,8 @@ export const light = createMuiTheme({
       // paper: '#dcdcdd'
     },
     primary: {
-      main: '#1985a1'
+      main: '#00d546',
+      contrastText: '#fff'
     },
     secondary: {
       main: '#4c5c68'

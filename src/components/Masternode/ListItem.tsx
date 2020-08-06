@@ -7,15 +7,18 @@ import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemText from "@material-ui/core/ListItemText";
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
-import Tooltip from "@material-ui/core/Tooltip";
+import Link from "@material-ui/core/Link";
 import Typography from "@material-ui/core/Typography";
 import DeleteIcon from "@material-ui/icons/Delete";
 import Skeleton from "@material-ui/lab/Skeleton";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { AddressAvatar } from "../../components/Avatar";
-import { IMasternode } from "../../providers/Energi/types"
+import { IMasternode } from "../../providers/Energi/types";
 import { estimateBlocksTil } from "../../providers/Energi/estimate";
 import { useRemoveAddress } from "../../providers/Energi/context";
+import Tooltip from "@material-ui/core/Tooltip";
+import Popover from "@material-ui/core/Popover";
+import Box from "@material-ui/core/Box";
 
 const useMasternodeListItemStyle = makeStyles((theme: Theme) =>
   createStyles({
@@ -55,26 +58,23 @@ export const MasternodeListItem = ({
     address,
   ]);
   const classes = useMasternodeListItemStyle({ isActive, isAlive });
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? "simple-popover" : undefined;
   return (
     <ListItem>
       {loading ? (
         <ListItemAvatar>
-          <Tooltip
-            title={
-              <>
-                <Typography noWrap>
-                  Address:{" "}
-                  <Typography
-                    component="span"
-                    style={{ textOverflow: "ellipsis" }}
-                  >
-                    {address}
-                  </Typography>
-                </Typography>
-                <Typography>Estimating next reward time...</Typography>
-              </>
-            }
-          >
+          <IconButton onClick={handleClick}>
             <Avatar style={{ position: "relative" }}>
               <CircularProgress
                 style={{
@@ -87,28 +87,11 @@ export const MasternodeListItem = ({
               />
               <AddressAvatar address={address} diameter={34} />
             </Avatar>
-          </Tooltip>
+          </IconButton>
         </ListItemAvatar>
       ) : (
-        <Tooltip
-          title={
-            <>
-              <Typography noWrap>
-                Address:{" "}
-                <Typography
-                  component="span"
-                  style={{ textOverflow: "ellipsis" }}
-                >
-                  {address}
-                </Typography>
-              </Typography>
-              <Typography>Rank: {rank}</Typography>
-              <Typography>Active: {String(isActive)}</Typography>
-              <Typography>Alive: {String(isAlive)}</Typography>
-            </>
-          }
-        >
-          <ListItemAvatar>
+        <ListItemAvatar>
+          <IconButton onClick={handleClick}>
             <Badge
               overlap="circle"
               classes={{ badge: classes.badge }}
@@ -122,27 +105,65 @@ export const MasternodeListItem = ({
                 <AddressAvatar address={address} diameter={34} />
               </Avatar>
             </Badge>
-          </ListItemAvatar>
-        </Tooltip>
+          </IconButton>
+        </ListItemAvatar>
       )}
       <ListItemText
         primary={
           loading ? (
             <Skeleton variant="text" width={120} />
-          ) : (
+          ) : typeof rank === 'number' ? (
             <>
-              #{rank} {estimatedTime?.format("MMMM Do YYYY, h:mm:ss a")}
+              #{rank} {estimatedTime?.format("MMMM Do YYYY, h:mm a")}
             </>
-          )
+          ) : 'Address not found in Masternode list'
         }
         secondary={
           loading ? <Skeleton variant="text" width={100} /> : estimatedTimeUntil
         }
       />
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <Box maxWidth={320} p={2}>
+          <Typography noWrap>
+            Address:{" "}
+            <Link
+              target="_blank"
+              href={`https://explorer.energi.network/address/${address}/coin_balances`}
+              style={{ textOverflow: "ellipsis" }}
+            >
+              {address}
+            </Link>
+          </Typography>
+          {loading ? (
+            <Typography>Estimating next reward time...</Typography>
+          ) : (
+            <>
+              <Typography>Rank: {rank}</Typography>
+              <Typography>Active: {String(isActive)}</Typography>
+              <Typography>Alive: {String(isAlive)}</Typography>
+            </>
+          )}
+        </Box>
+      </Popover>
       <ListItemSecondaryAction>
-        <IconButton size="small" onClick={() => removeAddress(address)}>
-          <DeleteIcon />
-        </IconButton>
+        <Tooltip title={<Typography>Remove address</Typography>}>
+          <IconButton size="small" onClick={() => removeAddress(address)}>
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
       </ListItemSecondaryAction>
     </ListItem>
   );
