@@ -1,4 +1,4 @@
-export const MAX_AGE = 1000 * 60 * 60
+export const MAX_AGE = 1000 * 60
 
 export const openIndexDb = async (name: string) => {
   if (!("indexedDB" in window)) {
