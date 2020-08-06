@@ -34,14 +34,20 @@ export const useAddAddress = () => {
   const addresses = useAddresses()
   const setAddresses = useSetAddresses()
   return useCallback((address) => {
-    setAddresses([address].concat(addresses.filter(v => v && v !== address)))
+    if (address) {
+      const lowerAddress = (address || '').toLowerCase()
+      setAddresses([lowerAddress].concat(addresses.filter(v => (v || '').toLowerCase() !== lowerAddress)))
+    }
   }, [addresses])
 }
 export const useRemoveAddress = () => {
   const addresses = useAddresses()
   const setAddresses = useSetAddresses()
   return useCallback((address) => {
-    setAddresses(addresses.filter(v => v === (address || '').toLowerCase()))
+    if (address) {
+      const lowerAddress = (address || '').toLowerCase()
+      setAddresses(addresses.filter(v => (v || '').toLowerCase() !== lowerAddress))
+    }
   }, [addresses])
 }
 export const useMasternodeList = () => useHawkState(masternodeListHawk)
