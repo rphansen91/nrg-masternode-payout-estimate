@@ -8,7 +8,8 @@ export const dark = createMuiTheme({
       paper: '#46494c'
     },
     primary: {
-      main: '#1985a1'
+      main: '#00d546',
+      contrastText: '#fff'
     },
     secondary: {
       main: '#4c5c68'
