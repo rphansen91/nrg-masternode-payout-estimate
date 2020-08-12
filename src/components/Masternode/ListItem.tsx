@@ -6,8 +6,10 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import DeleteIcon from "@material-ui/icons/Delete";
+import NotifyIcon from "@material-ui/icons/Notifications";
+import NotifyOffIcon from "@material-ui/icons/NotificationsOff";
 import Skeleton from "@material-ui/lab/Skeleton";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useRemoveAddress } from "../../providers/Energi/context";
 import { estimateBlocksTil } from "../../providers/Energi/estimate";
 import { IMasternode } from "../../providers/Energi/types";
@@ -16,6 +18,8 @@ import { MasternodePopover } from "./Popover";
 import Button from "@material-ui/core/Button";
 import Link from "@material-ui/core/Link";
 import Box from "@material-ui/core/Box";
+import { createScheduledNotification, cancelScheduledNotification, isNotificationScheduled, isFeatureDetected } from "../../providers/notification";
+import { Moment } from 'moment'
 
 export const MasternodeListItem = ({
   masternodeList,
@@ -57,7 +61,7 @@ export const MasternodeListItem = ({
   };
 
   return (
-    <ListItem>
+    <ListItem disableGutters>
       <MasternodePopover anchorEl={avatarEl} onClose={handleCloseAvatar}>
         <AddressLink address={address} />
         {loading ? (
@@ -118,15 +122,72 @@ export const MasternodeListItem = ({
         }
       />
       <ListItemSecondaryAction>
-        <Tooltip title={<Typography>Remove address</Typography>}>
-          <IconButton onClick={handleClickRemove}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
+        <Box display="flex" alignItems="center">
+          <NotifyButton address={address} estimatedTime={estimatedTime} />
+          <Tooltip title={<Typography>Remove address</Typography>}>
+            <IconButton onClick={handleClickRemove}>
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </ListItemSecondaryAction>
     </ListItem>
   );
 };
+
+const NotifyButton = ({ address, estimatedTime }: { address?: string, estimatedTime?: Moment }) => {
+  const [isEnabled, setIsEnabled] = useState<boolean|null>(null)
+  const [isScheduled, setIsScheduled] = useState<boolean|null>(null)
+  const handleClickNotify = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const notifyTime = estimatedTime?.clone()
+    notifyTime?.subtract(2, 'minutes')
+    const timestamp = notifyTime?.valueOf()
+    if (timestamp) {
+      createScheduledNotification({
+        tag: address,
+        title: 'NRG Masternode Payout ETA',
+        body: 'Your next payout will occur in approximately 2 minutes.',
+        timestamp
+      })
+    }
+  };
+  const handleClickCancel = async () => {
+    if (address) {
+      await cancelScheduledNotification({ tag: address })
+      setIsScheduled(false)
+    }
+  }
+  const checkNotificationStatus = async () => {
+    console.log({ address })
+    if (address) {
+      const enabled = await isFeatureDetected()
+      console.log({ enabled })
+      setIsEnabled(enabled)
+      const scheduled = await isNotificationScheduled({ tag: address })
+      console.log({ scheduled })
+      setIsScheduled(scheduled)
+    }
+  }
+  useEffect(() => {
+    checkNotificationStatus()
+  }, [address])
+  if (!isEnabled) return null
+  if (typeof isScheduled !== 'boolean') return null
+  if (isScheduled) return <Tooltip title={<Typography>Cancel scheduled notification</Typography>}>
+    <Box>
+      <IconButton onClick={handleClickCancel}>
+        <NotifyOffIcon />
+      </IconButton>
+    </Box>
+  </Tooltip>
+  return <Tooltip title={<Typography>Notify 2 minutes before</Typography>}>
+    <Box>
+      <IconButton onClick={handleClickNotify} disabled={!estimatedTime}>
+        <NotifyIcon />
+      </IconButton>
+    </Box>
+  </Tooltip>
+}
 
 const AddressLink = ({ address }: { address?: string }) => {
   return (
